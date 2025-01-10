@@ -4,6 +4,7 @@ use serde_json::Value;
 
 use crate::error::Error;
 
+// Detects $json:value$
 static JSON_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\$json:([a-zA-Z0-9_.]+)\$").unwrap());
 
 /// The different types of response parsers
@@ -34,20 +35,20 @@ fn convert_statement(statement: &String) -> UrlParseType {
 ///
 /// # Returns
 /// The image url resulting from parsing
-pub fn parse_response(response: &String, parser_stmt: &String) -> Result<String, Error> {
+pub fn parse_url(response: &String, parser_stmt: &String) -> Result<String, Error> {
     let parser = convert_statement(parser_stmt);
 
     match parser {
         UrlParseType::Json { path } => {
             let root_value = serde_json::from_str::<Value>(&response)
-                .map_err(|_| Error::InvalidResponse("invalid json".into()))?;
+                .map_err(|_| Error::InvalidResponse("Invalid json".into()))?;
             let target_value = path
                 .split('.')
                 .fold(Some(root_value), |current, key| current?.get(key).cloned())
-                .ok_or(Error::InvalidResponse("cannot find json value".into()))?;
+                .ok_or(Error::InvalidResponse("Cannot find json value".into()))?;
             Ok(target_value
                 .as_str()
-                .ok_or(Error::InvalidResponse("cannot parse json value".into()))?
+                .ok_or(Error::InvalidResponse("Cannot parse json value".into()))?
                 .to_string())
         }
         UrlParseType::Raw => Ok(response.to_string()),
@@ -56,7 +57,7 @@ pub fn parse_response(response: &String, parser_stmt: &String) -> Result<String,
 
 #[cfg(test)]
 pub mod tests {
-    use crate::parser::{parse_response, UrlParseType};
+    use crate::parser::{parse_url, UrlParseType};
 
     use super::convert_statement;
 
@@ -72,7 +73,7 @@ pub mod tests {
     #[test]
     pub fn test_parser() {
         assert_eq!(
-            parse_response(&"{\"url\": \"hello\"}".into(), &"$json:url$".into()).unwrap_or_default(),
+            parse_url(&"{\"url\": \"hello\"}".into(), &"$json:url$".into()).unwrap_or_default(),
             "hello".to_string()
         );
     }
