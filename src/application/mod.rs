@@ -11,7 +11,8 @@ use crate::{
 
 use self::tray::ShareShotTray;
 
-mod tray;
+pub(crate) mod tray;
+pub(crate) mod ui;
 
 pub static CONFIG: Lazy<Arc<Mutex<ShareShotConfig>>> =
     Lazy::new(|| Arc::new(Mutex::new(load_config().unwrap_or_default())));

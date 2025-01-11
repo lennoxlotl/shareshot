@@ -1,6 +1,7 @@
 use ksni::Tray;
 
 use crate::capture::capture_and_upload;
+use crate::application::ui::settings::spawn_settings_window;
 
 #[derive(Debug, Default)]
 pub(crate) struct ShareShotTray;
@@ -33,7 +34,11 @@ impl Tray for ShareShotTray {
             .into(),
             StandardItem {
                 label: "Settings".into(),
-                activate: Box::new(|_| {}),
+                activate: Box::new(|_| {
+                   tokio::spawn(async move {
+                        spawn_settings_window().await;
+                   });
+                }),
                 ..Default::default()
             }
             .into(),

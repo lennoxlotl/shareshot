@@ -8,6 +8,7 @@ pub mod capture;
 pub mod upload;
 pub mod config;
 pub mod parser;
+pub mod image;
 
 #[derive(Parser, Debug)]
 struct ShareShotArgs {

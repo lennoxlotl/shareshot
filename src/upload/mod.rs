@@ -1,11 +1,11 @@
 use once_cell::sync::Lazy;
-use reqwest::Client;
+use reqwest::{Client, RequestBuilder};
 
-use crate::{application::CONFIG, capture::ImageData, error::Error, parser::parse_url};
+use crate::{application::CONFIG, error::Error, image::Image, parser::parse_url};
 
-use self::upload_request::UploadRequestBuilder;
+use self::request::ImageUploadRequest;
 
-pub mod upload_request;
+pub mod request;
 
 pub(crate) static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 
@@ -13,11 +13,9 @@ pub(crate) static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 ///
 /// # Returns
 /// The url to the uploaded image
-pub async fn upload_image(image: ImageData) -> Result<String, Error> {
+pub async fn upload_image(image: Image) -> Result<String, Error> {
     let config = &CONFIG.lock().await.upload_server;
-    let response = UploadRequestBuilder::new(&config)
-        .with_image(image)
-        .build()
+    let response = RequestBuilder::from(ImageUploadRequest::new(&config, image))
         .send()
         .await
         .map_err(|err| Error::from(err))?;
