@@ -21,9 +21,7 @@ pub(crate) mod tray;
 pub static CONFIG: Lazy<Arc<Mutex<ShareShotConfig>>> =
     Lazy::new(|| Arc::new(Mutex::new(load_config().unwrap_or_default())));
 
-pub struct Application {
-    tray: ksni::Handle<ShareShotTray>,
-}
+pub struct Application {}
 
 #[derive(Debug)]
 pub enum ApplicationMessage {
@@ -51,9 +49,9 @@ impl SimpleAsyncComponent for Application {
             sender: sender.input_sender().clone(),
         };
 
-        let tray_handle = tray.spawn().await.unwrap();
+        tray.spawn().await.unwrap();
 
-        let model = Self { tray: tray_handle };
+        let model = Self {};
         let widgets = view_output!();
 
         AsyncComponentParts { model, widgets }
