@@ -2,13 +2,14 @@ use std::{collections::BTreeMap, str};
 
 use crate::{
     application::CONFIG,
-    config::{save_config, AllEnumValues, RequestMethod, UploadStrategy},
+    config::{save_config, AllEnumValues, RequestMethod, ShareShotConfig, UploadStrategy},
+    ShareShotArgs,
 };
 use adw::prelude::*;
 use enum_ordinalize::Ordinalize;
-use relm4::{prelude::*, AsyncComponentSender};
+use relm4::{abstractions::Toaster, prelude::*, AsyncComponentSender};
 
-use super::factory::header::{VisualizedHeader, VisualizedHeaderMessage};
+use super::{factory::header::{VisualizedHeader, VisualizedHeaderMessage}, save_with_report};
 
 pub struct UploadPage {
     current_url: String,
@@ -17,6 +18,7 @@ pub struct UploadPage {
     selected_request_method: i8,
     selected_upload_strategy: i8,
     headers: AsyncFactoryVecDeque<VisualizedHeader>,
+    toaster: Toaster,
 }
 
 #[derive(Debug)]
@@ -41,83 +43,87 @@ impl SimpleAsyncComponent for UploadPage {
         gtk4::Box {
             set_orientation: gtk4::Orientation::Vertical,
 
-            adw::PreferencesPage {
-                adw::PreferencesGroup {
-                    set_title: "General",
-                    gtk4::ListBox {
-                        add_css_class: "boxed-list",
-                        set_selection_mode: gtk4::SelectionMode::None,
+            #[local_ref]
+            toast_overlay -> adw::ToastOverlay {
+                set_vexpand: true,
+                adw::PreferencesPage {
+                    adw::PreferencesGroup {
+                        set_title: "General",
+                        gtk4::ListBox {
+                            add_css_class: "boxed-list",
+                            set_selection_mode: gtk4::SelectionMode::None,
 
-                        adw::EntryRow {
-                            set_title: "Url",
-                            set_text: &model.current_url,
-                            connect_changed[sender] => move |entry| {
-                                sender.input(UploadPageMessage::ChangeUrl(entry.text().to_string()));
-                            }
-                        },
-                        adw::ComboRow {
-                            set_title_lines: 1,
-                            set_subtitle_lines: 1,
-                            set_title: "Request method",
-                            set_subtitle: "The REST method to use when making the upload request",
-                            set_model: Some(&UploadPage::extract_strings_from::<RequestMethod>()),
-                            set_selected: model.selected_request_method as u32,
-                            connect_selected_notify[sender] => move |item| {
-                               sender.input(UploadPageMessage::ChangeRequestMethod(item.selected()));
+                            adw::EntryRow {
+                                set_title: "Url",
+                                set_text: &model.current_url,
+                                connect_changed[sender] => move |entry| {
+                                    sender.input(UploadPageMessage::ChangeUrl(entry.text().to_string()));
+                                }
                             },
-                        },
-                        adw::ComboRow {
-                            set_title_lines: 1,
-                            set_subtitle_lines: 1,
-                            set_title: "Upload strategy",
-                            set_subtitle: "The method to use for attaching the image to the REST request",
-                            set_model: Some(&UploadPage::extract_strings_from::<UploadStrategy>()),
-                            set_selected: model.selected_upload_strategy as u32,
-                            connect_selected_notify[sender] => move |item| {
-                               sender.input(UploadPageMessage::ChangeUploadStrategy(item.selected()));
+                            adw::ComboRow {
+                                set_title_lines: 1,
+                                set_subtitle_lines: 1,
+                                set_title: "Request method",
+                                set_subtitle: "The REST method to use when making the upload request",
+                                set_model: Some(&UploadPage::extract_strings_from::<RequestMethod>()),
+                                set_selected: model.selected_request_method as u32,
+                                connect_selected_notify[sender] => move |item| {
+                                sender.input(UploadPageMessage::ChangeRequestMethod(item.selected()));
+                                },
                             },
-                        },
-                        #[name(multipart_file_name)]
-                        adw::EntryRow {
-                            set_title: "Multipart file name",
-                            set_text: &model.current_file_form_name,
-                            #[watch]
-                            set_visible: model.selected_upload_strategy == UploadStrategy::Multipart.ordinal() as i8,
-                            connect_changed[sender] => move |entry| {
-                                sender.input(UploadPageMessage::ChangeFileFormName(entry.text().to_string()));
+                            adw::ComboRow {
+                                set_title_lines: 1,
+                                set_subtitle_lines: 1,
+                                set_title: "Upload strategy",
+                                set_subtitle: "The method to use for attaching the image to the REST request",
+                                set_model: Some(&UploadPage::extract_strings_from::<UploadStrategy>()),
+                                set_selected: model.selected_upload_strategy as u32,
+                                connect_selected_notify[sender] => move |item| {
+                                sender.input(UploadPageMessage::ChangeUploadStrategy(item.selected()));
+                                },
+                            },
+                            #[name(multipart_file_name)]
+                            adw::EntryRow {
+                                set_title: "Multipart file name",
+                                set_text: &model.current_file_form_name,
+                                #[watch]
+                                set_visible: model.selected_upload_strategy == UploadStrategy::Multipart.ordinal() as i8,
+                                connect_changed[sender] => move |entry| {
+                                    sender.input(UploadPageMessage::ChangeFileFormName(entry.text().to_string()));
+                                }
+                            },
+                            adw::EntryRow {
+                                set_title: "Response parse pattern",
+                                set_text: &model.current_url_parser,
+                                connect_changed[sender] => move |entry| {
+                                    sender.input(UploadPageMessage::ChangeUrlParser(entry.text().to_string()));
+                                }
+                            },
+                        }
+                    },
+                    adw::PreferencesGroup {
+                        set_title: "Headers",
+                        #[wrap(Some)]
+                        set_header_suffix = &gtk4::Box {
+                            add_css_class: "linked",
+
+                            gtk4::Button {
+                                set_css_classes: &vec!["flat"],
+                                set_icon_name: "plus",
+                                connect_clicked: move |_| {
+                                    sender.input(UploadPageMessage::AddHeader);
+                                }
                             }
                         },
-                        adw::EntryRow {
-                            set_title: "Response parse pattern",
-                            set_text: &model.current_url_parser,
-                            connect_changed[sender] => move |entry| {
-                                sender.input(UploadPageMessage::ChangeUrlParser(entry.text().to_string()));
-                            }
+
+                        #[local_ref]
+                        header_box -> gtk4::Box {
+                            set_orientation: gtk4::Orientation::Vertical,
+                            set_spacing: 4,
                         },
                     }
                 },
-                adw::PreferencesGroup {
-                    set_title: "Headers",
-                    #[wrap(Some)]
-                    set_header_suffix = &gtk4::Box {
-                        add_css_class: "linked",
-
-                        gtk4::Button {
-                            set_css_classes: &vec!["flat"],
-                            set_icon_name: "plus",
-                            connect_clicked: move |_| {
-                                sender.input(UploadPageMessage::AddHeader);
-                            }
-                        }
-                    },
-
-                    #[local_ref]
-                    header_box -> gtk4::Box {
-                        set_orientation: gtk4::Orientation::Vertical,
-                        set_spacing: 4,
-                    },
-                }
-            },
+            }
         }
     }
 
@@ -149,8 +155,10 @@ impl SimpleAsyncComponent for UploadPage {
             selected_request_method: config.upload_server.request_method.ordinal(),
             selected_upload_strategy: config.upload_server.upload_strategy.ordinal(),
             headers,
+            toaster: Toaster::default(),
         };
 
+        let toast_overlay = model.toaster.overlay_widget();
         let header_box = model.headers.widget();
         let widgets = view_output!();
 
@@ -164,15 +172,15 @@ impl SimpleAsyncComponent for UploadPage {
                     .guard()
                     .push_back((String::new(), String::new()));
 
-                self.save_headers().await;
+                self.save_with_headers().await;
             }
             UploadPageMessage::RemoveHeader(key) => {
                 self.headers.guard().remove(key.current_index());
 
-                self.save_headers().await;
+                self.save_with_headers().await;
             }
             UploadPageMessage::ChangeHeader => {
-                self.save_headers().await;
+                self.save_with_headers().await;
             }
             UploadPageMessage::ChangeUploadStrategy(index) => {
                 self.selected_upload_strategy = index as i8;
@@ -188,7 +196,7 @@ impl SimpleAsyncComponent for UploadPage {
             }
             UploadPageMessage::ChangeFileFormName(file_form_name) => {
                 self.current_file_form_name = file_form_name.clone();
-                self.save_without_headers().await; 
+                self.save_without_headers().await;
             }
             UploadPageMessage::ChangeUrlParser(url_parser) => {
                 self.current_url_parser = url_parser.clone();
@@ -216,10 +224,10 @@ impl UploadPage {
             UploadStrategy::from_ordinal(self.selected_upload_strategy).unwrap_or_default(),
         );
 
-        config.save().unwrap();
+        save_with_report(&config, &self.toaster).await;
     }
 
-    async fn save_headers(&mut self) {
+    async fn save_with_headers(&mut self) {
         let mut config = CONFIG.lock().await;
 
         let mut new_headers = BTreeMap::new();
@@ -231,7 +239,7 @@ impl UploadPage {
             });
         config.upload_server.headers = new_headers;
 
-        save_config(&config).unwrap();
+        save_with_report(&config, &self.toaster).await;
     }
 
     fn extract_strings_from<T>() -> gtk4::StringList

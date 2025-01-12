@@ -4,7 +4,9 @@ use gtk4::prelude::{GtkApplicationExt, GtkWindowExt, WidgetExt};
 use ksni::TrayMethods;
 use log::info;
 use once_cell::sync::Lazy;
-use relm4::{component::AsyncConnector, prelude::*, AsyncComponentSender, RelmApp};
+use relm4::{
+    abstractions::Toaster, component::AsyncConnector, prelude::*, AsyncComponentSender, RelmApp,
+};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use upload::UploadPage;
@@ -105,6 +107,21 @@ impl SimpleAsyncComponent for Application {
             }
         }
     }
+}
+
+pub(crate) async fn save_with_report(config: &ShareShotConfig, toaster: &Toaster) {
+    match config.save() {
+        Ok(_) => {}
+        Err(err) => {
+            toaster.add_toast(
+                adw::Toast::builder()
+                    .title("Failed to save config")
+                    .timeout(10000)
+                    .build(),
+            );
+            log::error!("Failed to save config: {}", err)
+        }
+    };
 }
 
 pub async fn create_application() -> Result<(), Error> {

@@ -1,9 +1,12 @@
-use crate::{application::CONFIG, config::save_config};
+use crate::{application::CONFIG, config::{save_config, ShareShotConfig}};
 use adw::prelude::*;
-use relm4::{prelude::*, AsyncComponentSender};
+use relm4::{abstractions::Toaster, prelude::*, AsyncComponentSender};
+
+use super::save_with_report;
 
 pub struct GeneralPage {
     cleanup_state: bool,
+    toaster: Toaster,
 }
 
 #[derive(Debug)]
@@ -21,26 +24,29 @@ impl SimpleAsyncComponent for GeneralPage {
         gtk4::Box {
             set_orientation: gtk4::Orientation::Vertical,
 
-            adw::PreferencesPage {
-                adw::PreferencesGroup {
-                    set_title: "Image",
+            #[local_ref]
+            toast_overlay -> adw::ToastOverlay {
+                adw::PreferencesPage {
+                    adw::PreferencesGroup {
+                        set_title: "Image",
 
-                    gtk4::ListBox {
-                        add_css_class: "boxed-list",
-                        set_selection_mode: gtk4::SelectionMode::None,
+                        gtk4::ListBox {
+                            add_css_class: "boxed-list",
+                            set_selection_mode: gtk4::SelectionMode::None,
 
-                        #[name = "cleanup"]
-                        adw::SwitchRow {
-                            set_title: "Cleanup",
-                            set_subtitle: "Deletes the screenshot file after upload",
-                            set_active: model.cleanup_state,
-                            connect_active_notify[sender] => move |switch| {
-                                sender.input(GeneralPageMessage::SetCleanup(switch.is_active()))
-                            },
+                            #[name = "cleanup"]
+                            adw::SwitchRow {
+                                set_title: "Cleanup",
+                                set_subtitle: "Deletes the screenshot file after upload",
+                                set_active: model.cleanup_state,
+                                connect_active_notify[sender] => move |switch| {
+                                    sender.input(GeneralPageMessage::SetCleanup(switch.is_active()))
+                                },
+                            }
                         }
                     }
-                }
-            },
+                },
+            }
         }
     }
 
@@ -53,7 +59,10 @@ impl SimpleAsyncComponent for GeneralPage {
 
         let model = Self {
             cleanup_state: config.cleanup,
+            toaster: Toaster::default(),
         };
+
+        let toast_overlay = model.toaster.overlay_widget();
         let widgets = view_output!();
 
         AsyncComponentParts { model, widgets }
@@ -67,7 +76,7 @@ impl SimpleAsyncComponent for GeneralPage {
                 self.cleanup_state = active;
                 config.cleanup = active;
 
-                save_config(&config).unwrap();
+                save_with_report(&config, &self.toaster).await;
             }
         }
     }
