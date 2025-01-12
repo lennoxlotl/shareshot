@@ -51,6 +51,12 @@ pub enum Error {
     /// Config on drive is most likely outdated or contains invalid properties.
     #[error("Failed to load configuration file")]
     ConfigLoad,
+    /// Config save error
+    ///
+    /// Configuration saving failed.
+    /// The configuration folder was most likely not created properly or the user doesn't have permission to edit it.
+    #[error("Failed to save configuration file")]
+    ConfigSave,
     /// Invalid response error
     ///
     /// Invalid response received from server.

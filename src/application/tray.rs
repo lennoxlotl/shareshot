@@ -1,9 +1,6 @@
 use ksni::Tray;
-use relm4::AsyncComponentSender;
 
 use crate::{application::ApplicationMessage, capture::capture_and_upload};
-
-use super::Application;
 
 pub(crate) struct ShareShotTray {
     pub sender: relm4::Sender<ApplicationMessage>,

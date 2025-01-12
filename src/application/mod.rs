@@ -1,13 +1,13 @@
+use adw::prelude::*;
+use general::GeneralPage;
 use gtk4::prelude::{GtkApplicationExt, GtkWindowExt, WidgetExt};
 use ksni::TrayMethods;
 use log::info;
 use once_cell::sync::Lazy;
-use relm4::{
-    prelude::{AsyncComponentParts, SimpleAsyncComponent},
-    AsyncComponentSender, RelmApp,
-};
+use relm4::{component::AsyncConnector, prelude::*, AsyncComponentSender, RelmApp};
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use upload::UploadPage;
 
 use crate::{
     config::{load_config, ShareShotConfig},
@@ -16,12 +16,21 @@ use crate::{
 
 use self::tray::ShareShotTray;
 
+pub(crate) mod factory;
+pub(crate) mod general;
 pub(crate) mod tray;
+pub(crate) mod upload;
+pub(crate) mod icon_names {
+    include!(concat!(env!("OUT_DIR"), "/icon_names.rs"));
+}
 
 pub static CONFIG: Lazy<Arc<Mutex<ShareShotConfig>>> =
     Lazy::new(|| Arc::new(Mutex::new(load_config().unwrap_or_default())));
 
-pub struct Application {}
+pub struct Application {
+    general_page: AsyncConnector<GeneralPage>,
+    upload_page: AsyncConnector<UploadPage>,
+}
 
 #[derive(Debug)]
 pub enum ApplicationMessage {
@@ -35,7 +44,33 @@ impl SimpleAsyncComponent for Application {
     type Output = ();
 
     view! {
-        gtk4::Window {}
+        adw::ApplicationWindow {
+            set_size_request: (660, 600),
+
+            adw::ToolbarView {
+                #[wrap(Some)]
+                set_content = &gtk4::Box {
+                    set_orientation: gtk4::Orientation::Vertical,
+
+                    adw::Clamp {
+                        #[name = "view_stack"]
+                        adw::ViewStack {
+                            set_vexpand: true,
+                            add_titled: (model.general_page.widget(), Some("general"), "General"),
+                            add_titled: (model.upload_page.widget(), Some("upload"), "Upload"),
+                        },
+                    }
+                },
+                add_top_bar = &adw::HeaderBar {
+                    #[wrap(Some)]
+                    #[name = "view_switcher"]
+                    set_title_widget = &adw::ViewSwitcher {
+                        set_policy: adw::ViewSwitcherPolicy::Wide,
+                        set_stack = Some(&view_stack),
+                    },
+                },
+            }
+        }
     }
 
     async fn init(
@@ -51,7 +86,10 @@ impl SimpleAsyncComponent for Application {
 
         tray.spawn().await.unwrap();
 
-        let model = Self {};
+        let model = Self {
+            general_page: GeneralPage::builder().launch(()),
+            upload_page: UploadPage::builder().launch(()),
+        };
         let widgets = view_output!();
 
         AsyncComponentParts { model, widgets }
@@ -73,13 +111,10 @@ pub async fn create_application() -> Result<(), Error> {
     let _conn = crate::dbus::service::create_dbus_service().await?;
     info!("Created DBus service successfully");
 
-    RelmApp::new("dev.lennoxlotl.ShareShotWindow")
+    relm4_icons::initialize_icons(icon_names::GRESOURCE_BYTES, icon_names::RESOURCE_PREFIX);
+    RelmApp::new("dev.lennoxlotl.ShareShotSettings")
         .visible_on_activate(false)
         .run_async::<Application>(0);
-
-    //  let tray = ShareShotTray::default();
-    //    tray.spawn().await.unwrap();
-    //info!("Created tray icon successfully");
 
     Ok(())
 }
