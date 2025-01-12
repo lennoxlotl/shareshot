@@ -4,7 +4,12 @@ use gtk4::prelude::{GtkApplicationExt, GtkWindowExt, WidgetExt};
 use ksni::TrayMethods;
 use log::info;
 use once_cell::sync::Lazy;
-use relm4::{component::AsyncConnector, prelude::*, AsyncComponentSender, RelmApp};
+use relm4::{
+    actions::{ActionGroupName, RelmAction, RelmActionGroup},
+    component::AsyncConnector,
+    prelude::*,
+    AsyncComponentSender, RelmApp,
+};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use upload::UploadPage;
@@ -37,6 +42,9 @@ pub enum ApplicationMessage {
     ShowSettingsWindow,
 }
 
+relm4::new_action_group!(ApplicationActionGroup, "group");
+relm4::new_stateless_action!(ShowAboutDialog, ApplicationActionGroup, "show-about-dialog");
+
 #[relm4::component(pub async)]
 impl SimpleAsyncComponent for Application {
     type Init = u8;
@@ -68,7 +76,19 @@ impl SimpleAsyncComponent for Application {
                         set_policy: adw::ViewSwitcherPolicy::Wide,
                         set_stack = Some(&view_stack),
                     },
+                    pack_end = &gtk4::MenuButton {
+                        set_icon_name: "open-menu-symbolic",
+                        set_menu_model: Some(&window_menu),
+                    }
                 },
+            }
+        }
+    }
+
+    menu! {
+        window_menu: {
+            section! {
+                "About" => ShowAboutDialog,
             }
         }
     }
@@ -78,7 +98,28 @@ impl SimpleAsyncComponent for Application {
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
+        let mut group = RelmActionGroup::<ApplicationActionGroup>::new();
+        let cloned_root = root.clone();
+
+        // TODO: move this into a component
+        group.add_action(RelmAction::<ShowAboutDialog>::new_stateless(move |_| {
+            let dialog = adw::AboutDialog::builder()
+                .application_name("ShareShot")
+                .developer_name("Lennox Schneider")
+                .version("1.0.0")
+                .comments("The best screenshot uploader app.")
+                .website("https://github.com/lennoxlotl/shareshot")
+                .license_type(gtk4::License::MitX11)
+                .build();
+            
+            dialog.present(Some(&cloned_root));
+        }));
+
         root.set_hide_on_close(true);
+        root.insert_action_group(
+            ApplicationActionGroup::NAME,
+            Some(&group.into_action_group()),
+        );
 
         let tray = ShareShotTray {
             sender: sender.input_sender().clone(),
