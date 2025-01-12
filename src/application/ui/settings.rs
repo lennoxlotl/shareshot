@@ -14,7 +14,6 @@ impl SimpleAsyncComponent for SettingsApp {
 
     view! {
         gtk4::Window {
-            set_title: Some("Settings")
         }
     }
 
@@ -33,6 +32,6 @@ impl SimpleAsyncComponent for SettingsApp {
 }
 
 pub async fn spawn_settings_window() {
-    let app = RelmApp::new("dev.lennoxlotl.ShareShotSettings");
+    let app = RelmApp::new("dev.lennoxlotl.ShareShot");
     app.run_async::<SettingsApp>(0);
 }

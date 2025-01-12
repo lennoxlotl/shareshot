@@ -1,5 +1,5 @@
 use ksni::TrayMethods;
-use log::{info};
+use log::info;
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 use tokio::sync::Mutex;

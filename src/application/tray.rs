@@ -1,10 +1,9 @@
 use ksni::Tray;
 
-use crate::capture::capture_and_upload;
-use crate::application::ui::settings::spawn_settings_window;
+use crate::{application::ui::settings::spawn_settings_window, capture::capture_and_upload};
 
 #[derive(Debug, Default)]
-pub(crate) struct ShareShotTray;
+pub(crate) struct ShareShotTray {}
 
 impl Tray for ShareShotTray {
     fn id(&self) -> String {
