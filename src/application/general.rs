@@ -1,4 +1,4 @@
-use crate::{application::CONFIG, config::{save_config, ShareShotConfig}};
+use crate::application::CONFIG;
 use adw::prelude::*;
 use relm4::{abstractions::Toaster, prelude::*, AsyncComponentSender};
 

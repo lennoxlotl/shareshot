@@ -2,8 +2,7 @@ use std::{collections::BTreeMap, str};
 
 use crate::{
     application::CONFIG,
-    config::{save_config, AllEnumValues, RequestMethod, ShareShotConfig, UploadStrategy},
-    ShareShotArgs,
+    config::{AllEnumValues, RequestMethod, UploadStrategy},
 };
 use adw::prelude::*;
 use enum_ordinalize::Ordinalize;
