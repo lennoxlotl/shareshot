@@ -5,8 +5,10 @@ use ksni::TrayMethods;
 use log::info;
 use once_cell::sync::Lazy;
 use relm4::{
+    abstractions::Toaster,
     actions::{ActionGroupName, RelmAction, RelmActionGroup},
     component::AsyncConnector,
+    prelude::*,
     prelude::*,
     AsyncComponentSender, RelmApp,
 };
@@ -64,8 +66,8 @@ impl SimpleAsyncComponent for Application {
                         #[name = "view_stack"]
                         adw::ViewStack {
                             set_vexpand: true,
-                            add_titled: (model.general_page.widget(), Some("general"), "General"),
-                            add_titled: (model.upload_page.widget(), Some("upload"), "Upload"),
+                            add_titled_with_icon: (model.general_page.widget(), Some("general"), "General", crate::application::icon_names::SETTINGS),
+                            add_titled_with_icon: (model.upload_page.widget(), Some("upload"), "Upload", crate::application::icon_names::SHARE),
                         },
                     }
                 },
@@ -111,7 +113,7 @@ impl SimpleAsyncComponent for Application {
                 .website("https://github.com/lennoxlotl/shareshot")
                 .license_type(gtk4::License::MitX11)
                 .build();
-            
+
             dialog.present(Some(&cloned_root));
         }));
 
@@ -146,6 +148,21 @@ impl SimpleAsyncComponent for Application {
             }
         }
     }
+}
+
+pub(crate) async fn save_with_report(config: &ShareShotConfig, toaster: &Toaster) {
+    match config.save() {
+        Ok(_) => {}
+        Err(err) => {
+            toaster.add_toast(
+                adw::Toast::builder()
+                    .title("Failed to save config")
+                    .timeout(10000)
+                    .build(),
+            );
+            log::error!("Failed to save config: {}", err)
+        }
+    };
 }
 
 pub async fn create_application() -> Result<(), Error> {
