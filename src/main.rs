@@ -2,13 +2,13 @@ use clap::Parser;
 use log::error;
 
 pub mod application;
+pub mod capture;
+pub mod config;
 pub mod dbus;
 pub mod error;
-pub mod capture;
-pub mod upload;
-pub mod config;
-pub mod parser;
 pub mod image;
+pub mod parser;
+pub mod upload;
 
 #[derive(Parser, Debug)]
 struct ShareShotArgs {
@@ -32,11 +32,10 @@ async fn main() {
     if args.should_request_capture() {
     } else {
         match application::create_application().await {
-            Ok(_) => {
-            },
+            Ok(_) => {}
             Err(err) => {
                 error!("Failed to launch ShareShot ({})", err);
-            },
+            }
         }
     }
 }

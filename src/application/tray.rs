@@ -1,9 +1,13 @@
 use ksni::Tray;
+use relm4::AsyncComponentSender;
 
-use crate::{application::ui::settings::spawn_settings_window, capture::capture_and_upload};
+use crate::{application::ApplicationMessage, capture::capture_and_upload};
 
-#[derive(Debug, Default)]
-pub(crate) struct ShareShotTray {}
+use super::Application;
+
+pub(crate) struct ShareShotTray {
+    pub sender: relm4::Sender<ApplicationMessage>,
+}
 
 impl Tray for ShareShotTray {
     fn id(&self) -> String {
@@ -25,7 +29,9 @@ impl Tray for ShareShotTray {
                 label: "Capture".into(),
                 activate: Box::new(|_| {
                     tokio::spawn(async move {
-                        capture_and_upload().await.unwrap();
+                        capture_and_upload()
+                            .await
+                            .expect("Failed to capture, screenshot has been canceled?");
                     });
                 }),
                 ..Default::default()
@@ -33,10 +39,8 @@ impl Tray for ShareShotTray {
             .into(),
             StandardItem {
                 label: "Settings".into(),
-                activate: Box::new(|_| {
-                   tokio::spawn(async move {
-                        spawn_settings_window().await;
-                   });
+                activate: Box::new(|tray: &mut Self| {
+                    let _ = tray.sender.send(ApplicationMessage::ShowSettingsWindow);
                 }),
                 ..Default::default()
             }

@@ -52,4 +52,3 @@ impl Image {
         &self.mime_type
     }
 }
-
