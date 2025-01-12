@@ -58,7 +58,6 @@ impl SimpleAsyncComponent for UploadPage {
                         adw::ComboRow {
                             set_title_lines: 1,
                             set_subtitle_lines: 1,
-
                             set_title: "Request method",
                             set_subtitle: "The REST method to use when making the upload request",
                             set_model: Some(&UploadPage::extract_strings_from::<RequestMethod>()),
@@ -70,7 +69,6 @@ impl SimpleAsyncComponent for UploadPage {
                         adw::ComboRow {
                             set_title_lines: 1,
                             set_subtitle_lines: 1,
-
                             set_title: "Upload strategy",
                             set_subtitle: "The method to use for attaching the image to the REST request",
                             set_model: Some(&UploadPage::extract_strings_from::<UploadStrategy>()),

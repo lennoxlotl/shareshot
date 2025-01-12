@@ -24,6 +24,7 @@ impl SimpleAsyncComponent for GeneralPage {
             adw::PreferencesPage {
                 adw::PreferencesGroup {
                     set_title: "Image",
+
                     gtk4::ListBox {
                         add_css_class: "boxed-list",
                         set_selection_mode: gtk4::SelectionMode::None,
