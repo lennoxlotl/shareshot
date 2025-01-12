@@ -54,7 +54,7 @@ impl SimpleAsyncComponent for UploadPage {
                             set_selection_mode: gtk4::SelectionMode::None,
 
                             adw::EntryRow {
-                                set_title: "Url",
+                                set_title: "URL",
                                 set_text: &model.current_url,
                                 connect_changed[sender] => move |entry| {
                                     sender.input(UploadPageMessage::ChangeUrl(entry.text().to_string()));
@@ -63,7 +63,7 @@ impl SimpleAsyncComponent for UploadPage {
                             adw::ComboRow {
                                 set_title_lines: 1,
                                 set_subtitle_lines: 1,
-                                set_title: "Request method",
+                                set_title: "Request Method",
                                 set_subtitle: "The REST method to use when making the upload request",
                                 set_model: Some(&UploadPage::extract_strings_from::<RequestMethod>()),
                                 set_selected: model.selected_request_method as u32,
@@ -74,7 +74,7 @@ impl SimpleAsyncComponent for UploadPage {
                             adw::ComboRow {
                                 set_title_lines: 1,
                                 set_subtitle_lines: 1,
-                                set_title: "Upload strategy",
+                                set_title: "Upload Strategy",
                                 set_subtitle: "The method to use for attaching the image to the REST request",
                                 set_model: Some(&UploadPage::extract_strings_from::<UploadStrategy>()),
                                 set_selected: model.selected_upload_strategy as u32,
@@ -84,7 +84,7 @@ impl SimpleAsyncComponent for UploadPage {
                             },
                             #[name(multipart_file_name)]
                             adw::EntryRow {
-                                set_title: "Multipart file name",
+                                set_title: "Multipart File Name",
                                 set_text: &model.current_file_form_name,
                                 #[watch]
                                 set_visible: model.selected_upload_strategy == UploadStrategy::Multipart.ordinal() as i8,
@@ -93,7 +93,8 @@ impl SimpleAsyncComponent for UploadPage {
                                 }
                             },
                             adw::EntryRow {
-                                set_title: "Response parse pattern",
+                                set_title: "Response Parse Pattern",
+                                set_tooltip_text: Some("Parser Options:\n* $raw$ - Copies the raw response content into clipboard\n* $json:data.key$ Copies the JSON value at `data.key` into clipboard"),
                                 set_text: &model.current_url_parser,
                                 connect_changed[sender] => move |entry| {
                                     sender.input(UploadPageMessage::ChangeUrlParser(entry.text().to_string()));

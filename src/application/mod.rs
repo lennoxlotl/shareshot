@@ -58,8 +58,8 @@ impl SimpleAsyncComponent for Application {
                         #[name = "view_stack"]
                         adw::ViewStack {
                             set_vexpand: true,
-                            add_titled: (model.general_page.widget(), Some("general"), "General"),
-                            add_titled: (model.upload_page.widget(), Some("upload"), "Upload"),
+                            add_titled_with_icon: (model.general_page.widget(), Some("general"), "General", crate::application::icon_names::SETTINGS),
+                            add_titled_with_icon: (model.upload_page.widget(), Some("upload"), "Upload", crate::application::icon_names::SHARE),
                         },
                     }
                 },

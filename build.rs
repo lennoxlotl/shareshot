@@ -4,6 +4,6 @@ fn main() {
         Some("dev.lennoxlotl.ShareShot"),
         None::<&str>,
         None::<&str>,
-        ["plus", "floppy", "cross-large"],
+        ["plus", "cross-large", "settings", "share"],
     );
 }
