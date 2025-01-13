@@ -55,6 +55,7 @@ impl SimpleAsyncComponent for Application {
     view! {
         adw::ApplicationWindow {
             set_size_request: (660, 600),
+            add_css_class: &"devel",
 
             adw::ToolbarView {
                 #[wrap(Some)]
