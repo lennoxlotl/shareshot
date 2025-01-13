@@ -25,11 +25,11 @@ use super::CLIENT;
 /// ```
 pub struct ImageUploadRequest<'a> {
     config: &'a UploadConfig,
-    image: Image,
+    image: &'a Image,
 }
 
 impl<'a> ImageUploadRequest<'a> {
-    pub fn new(config: &'a UploadConfig, image: Image) -> Self {
+    pub fn new(config: &'a UploadConfig, image: &'a Image) -> Self {
         Self { config, image }
     }
 }

@@ -2,18 +2,23 @@ use std::process::Command;
 
 use ashpd::desktop::screenshot::Screenshot;
 
-use crate::{error::Error, image::Image, upload::upload_image};
+use crate::{application::CONFIG, error::Error, image::Image, upload::upload_image};
 
 /// Makes a screen capture and uploads it to the server defined in the configuration.
 pub async fn capture_and_upload() -> Result<(), Error> {
     let image = make_screen_capture().await?;
-    let url = upload_image(image).await?;
+    let url = upload_image(&image).await?;
 
     // TODO: Exchange this with proper clipboard copy if a protocol ever gets added
     Command::new("wl-copy")
         .arg(url)
         .spawn()
         .map_err(|err| Error::from(err))?;
+
+    let config = CONFIG.lock().await;
+    if config.cleanup {
+        std::fs::remove_file(image.path()).map_err(|err| Error::from(err))?;
+    }
 
     Ok(())
 }

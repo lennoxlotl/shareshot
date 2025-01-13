@@ -13,7 +13,7 @@ pub(crate) static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 ///
 /// # Returns
 /// The url to the uploaded image
-pub async fn upload_image(image: Image) -> Result<String, Error> {
+pub async fn upload_image(image: &Image) -> Result<String, Error> {
     let config = &CONFIG.lock().await.upload_server;
     let response = RequestBuilder::from(ImageUploadRequest::new(&config, image))
         .send()
