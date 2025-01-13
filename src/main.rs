@@ -13,14 +13,12 @@ pub mod upload;
 #[derive(Parser, Debug)]
 struct ShareShotArgs {
     #[arg(long, default_value_t = false)]
-    capture_region: bool,
-    #[arg(long)]
-    capture_display: Option<String>,
+    capture: bool,
 }
 
 impl ShareShotArgs {
-    fn should_request_capture(&self) -> bool {
-        self.capture_region || self.capture_display.is_some()
+    fn capture(&self) -> bool {
+        self.capture
     }
 }
 
@@ -29,7 +27,7 @@ async fn main() {
     pretty_env_logger::init();
     let args = ShareShotArgs::parse();
 
-    if args.should_request_capture() {
+    if args.capture() {
     } else {
         match application::create_application().await {
             Ok(_) => {}
