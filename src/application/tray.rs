@@ -6,6 +6,7 @@ pub(crate) struct ShareShotTray {
     pub sender: relm4::Sender<ApplicationMessage>,
 }
 
+// TODO: Replace this with `Background Apps` actions once the feature is available in GNOME (keep this as fallback?)
 impl Tray for ShareShotTray {
     fn id(&self) -> String {
         "shareshot".into()
