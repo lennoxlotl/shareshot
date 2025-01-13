@@ -1,25 +1,25 @@
 use zbus::{connection, interface, Connection};
 
-use crate::error::Error;
+use crate::{capture::capture_and_upload, error::Error};
 
 #[derive(Default)]
 pub struct CaptureService;
 
 #[interface(name = "dev.lennoxlotl.ShareShot.CaptureService")]
 impl CaptureService {
-    fn request_capture(&mut self, region: bool, display: &str) -> String {
-        "Hello".to_string()
+    async fn request_capture(&mut self) -> String {
+        match capture_and_upload().await {
+            Ok(_) => "Upload successful".into(),
+            Err(err) => format!("Failed to upload: {}", err),
+        }
     }
 }
 
 pub async fn create_dbus_service() -> Result<Connection, Error> {
     let service = CaptureService::default();
-    connection::Builder::session()
-        .map_err(|err| Error::DbusCreate(Box::new(err)))?
-        .name("dev.lennoxlotl.ShareShot")
-        .map_err(|err| Error::DbusCreate(Box::new(err)))?
-        .serve_at("/dev/lennoxlotl/ShareShot/CaptureService", service)
-        .map_err(|err| Error::DbusCreate(Box::new(err)))?
+    connection::Builder::session()?
+        .name("dev.lennoxlotl.ShareShot")?
+        .serve_at("/dev/lennoxlotl/ShareShot/CaptureService", service)?
         .build()
         .await
         .map_err(|err| Error::from(err))

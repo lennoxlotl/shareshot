@@ -27,13 +27,14 @@ async fn main() {
     pretty_env_logger::init();
     let args = ShareShotArgs::parse();
 
-    if args.capture() {
+    match if args.capture() {
+        dbus::client::request_capture().await
     } else {
-        match application::create_application().await {
-            Ok(_) => {}
-            Err(err) => {
-                error!("Failed to launch ShareShot ({})", err);
-            }
+        application::create_application().await
+    } {
+        Ok(_) => {}
+        Err(err) => {
+            error!("Failed to launch ShareShot: {err}");
         }
     }
 }

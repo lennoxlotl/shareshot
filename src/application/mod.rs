@@ -9,7 +9,6 @@ use relm4::{
     actions::{ActionGroupName, RelmAction, RelmActionGroup},
     component::AsyncConnector,
     prelude::*,
-    prelude::*,
     AsyncComponentSender, RelmApp,
 };
 use std::sync::Arc;
