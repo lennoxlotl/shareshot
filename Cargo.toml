@@ -4,6 +4,9 @@ edition = "2021"
 name = "shareshot"
 version = "0.0.1"
 
+[profile.release]
+lto = true
+
 [dependencies]
 clap = { version = "4.5.26", features = ["derive"] }
 gtk4 = "0.9.5"

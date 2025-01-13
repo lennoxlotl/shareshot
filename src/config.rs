@@ -160,6 +160,7 @@ pub fn save_config(config: &ShareShotConfig) -> Result<(), Error> {
 /// Creates and returns the config path.
 fn config_path() -> Option<PathBuf> {
     let mut home_dir = home::home_dir()?;
+    println!("Using home directory: {}", &home_dir.display());
     home_dir.push(".config");
     home_dir.push("shareshot");
     fs::create_dir_all(&home_dir).ok()?;

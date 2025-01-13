@@ -1,0 +1,6 @@
+data/dev.lennoxlotl.ShareShot.desktop.in.in
+data/dev.lennoxlotl.ShareShot.gschema.xml.in
+data/dev.lennoxlotl.ShareShot.metainfo.xml.in.in
+data/resources/ui/shortcuts.ui
+data/resources/ui/window.ui
+src/application.rs
