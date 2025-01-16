@@ -81,4 +81,10 @@ pub enum Error {
     /// Did the currently used portal implement the screenshot protocol properly?
     #[error("Image not found, was the screenshot taken?")]
     ImageNotFound,
+    /// Clipboard error,
+    ///
+    /// Failed to copy content to clipboard.
+    /// The system is most likely incompatible with broadly used clipboard protocols.
+    #[error("Failed to copy text to clipboard: {0}")]
+    Clipboard(#[from] arboard::Error),
 }

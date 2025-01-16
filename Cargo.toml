@@ -29,6 +29,7 @@ relm4-components = "0.9.1"
 relm4-icons = "0.10.0-beta.1"
 strum_macros = "0.26.4"
 enum-ordinalize = "4.3.0"
+arboard = "3.4.1"
 
 [dependencies.adw]
 package = "libadwaita"

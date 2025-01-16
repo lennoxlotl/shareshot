@@ -1,5 +1,4 @@
-use std::process::Command;
-
+use arboard::Clipboard;
 use ashpd::desktop::screenshot::Screenshot;
 
 use crate::{application::CONFIG, error::Error, image::Image, upload::upload_image};
@@ -9,11 +8,7 @@ pub async fn capture_and_upload() -> Result<(), Error> {
     let image = make_screen_capture().await?;
     let url = upload_image(&image).await?;
 
-    // TODO: Exchange this with proper clipboard copy if a protocol ever gets added
-    Command::new("wl-copy")
-        .arg(url)
-        .spawn()
-        .map_err(|err| Error::from(err))?;
+    Clipboard::new()?.set_text(url)?;
 
     let config = CONFIG.lock().await;
     if config.cleanup {
