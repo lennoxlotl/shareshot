@@ -5,7 +5,6 @@ A simple automatic screenshot uploading tool for GNOME.
 
 ## Requirements
 
-* `wl-clipboard`
 * `dbus`
 * `xdg-desktop-portal` (Specifically the screenshot protocol)
 * `gtk4`
